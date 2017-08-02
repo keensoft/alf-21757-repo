@@ -1,8 +1,8 @@
 <?xml version='1.0' encoding='UTF-8'?>
-<web-app xmlns="http://java.sun.com/xml/ns/j2ee"
-    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-    xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd"
-    version="2.4">
+<web-app xmlns="http://java.sun.com/xml/ns/javaee"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_3_0.xsd"
+         version="3.0">
    
    <display-name>Alfresco</display-name>
 
@@ -21,9 +21,9 @@
       <param-value>false</param-value>
    </context-param>
 
-	<!--  These were previously init params for the WebDAV servlet,
-	      but since they are also needed to MT-enable the 
-	      ExternalAccess servlet, I have made them context wide. -->
+   <!--  These were previously init params for the WebDAV servlet,
+         but since they are also needed to MT-enable the 
+         ExternalAccess servlet, I have made them context wide. -->
    <context-param>
          <param-name>store</param-name>
          <param-value>workspace://SpacesStore</param-value>
@@ -97,7 +97,14 @@
       </init-param>
       -->
    </filter>
-   
+
+   <filter>
+      <description>CSRF Token filter. Checks for a session based CSRF token in request headers (or form parameters) based on config.</description>
+      <filter-name>CSRF Token Filter</filter-name>
+      <filter-class>org.springframework.extensions.webscripts.servlet.CSRFFilter</filter-class>
+   </filter>
+
+
    <!-- CORS Filter Begin -->
    <!--<filter>
       <filter-name>CORS</filter-name>
@@ -195,22 +202,23 @@
       <url-pattern>/wcs/*</url-pattern>
    </filter-mapping>
    
-<!--
+   <!-- MNT-15500 (https://issues.alfresco.com/jira/browse/MNT-15500)
+        CMIS is not supporting SPNEGO protocol for Kerberos SSO
    <filter-mapping>
       <filter-name>Global Authentication Filter</filter-name>
       <url-pattern>/api/*</url-pattern>
    </filter-mapping>
--->
+   -->
+
    <filter-mapping>
       <filter-name>WebDAV Authentication Filter</filter-name>
       <url-pattern>/webdav/*</url-pattern>
    </filter-mapping>
-<!-- 
+
    <filter-mapping>
       <filter-name>WebDAV Authentication Filter</filter-name>
       <url-pattern>/cmisatom/*</url-pattern>
    </filter-mapping>
--->
 
    <filter-mapping>
       <filter-name>X509AuthFilter</filter-name>
@@ -232,6 +240,45 @@
       <url-pattern>/wcs/api/solr/*</url-pattern>
    </filter-mapping>
 
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/service/enterprise/admin/*</url-pattern>
+   </filter-mapping>
+
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/s/enterprise/admin/*</url-pattern>
+   </filter-mapping>
+   
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/service/admin/*</url-pattern>
+   </filter-mapping>
+
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/s/admin/*</url-pattern>
+   </filter-mapping>
+   
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/wcservice/enterprise/admin/*</url-pattern>
+   </filter-mapping>
+
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/wcs/enterprise/admin/*</url-pattern>
+   </filter-mapping>
+   
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/wcservice/admin/*</url-pattern>
+   </filter-mapping>
+
+   <filter-mapping>
+      <filter-name>CSRF Token Filter</filter-name>
+      <url-pattern>/wcs/admin/*</url-pattern>
+   </filter-mapping>
 
    <!-- Enterprise filter-mapping placeholder -->
 
@@ -253,11 +300,6 @@
    <listener>
       <listener-class>org.alfresco.repo.webdav.WebDAVSessionListener</listener-class>
    </listener>
-
-   <!-- Web Services context listener for OpenCMIS -->
-   <listener>
-        <listener-class>com.sun.xml.ws.transport.http.servlet.WSServletContextListener</listener-class>
-   </listener> 
 
    <!-- Enterprise listener placeholder -->
 
@@ -301,7 +343,7 @@
       <servlet-class>org.springframework.extensions.webscripts.servlet.WebScriptServlet</servlet-class>
       <init-param>
          <param-name>authenticator</param-name>
-         <param-value>webscripts.authenticator.webclient</param-value>
+         <param-value>webscripts.authenticator.remoteuser</param-value>
       </init-param>
    </servlet>
 
@@ -478,8 +520,8 @@
 
    <!-- The cmisbrowser endpoint is provided by the Chemistry project.
         If you uncomment this section you need to make sure for security
-		reasons that that you have a firewall set up so that it is not
-		accessible from outside of the organisation.
+      reasons that that you have a firewall set up so that it is not
+      accessible from outside of the organisation.
    <servlet-mapping>
       <servlet-name>CMISFileShareServlet</servlet-name>
       <url-pattern>/cmisbrowser</url-pattern>
